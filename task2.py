@@ -2,7 +2,7 @@
 
 import numpy as np
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
-from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, GradientBoostingClassifier, VotingClassifier
 from sklearn.neighbors import RadiusNeighborsClassifier, KNeighborsClassifier
 from sklearn.linear_model import SGDClassifier,LogisticRegression
 from sklearn.svm import LinearSVC, SVC, SVR
@@ -16,7 +16,7 @@ def print_detail(clf):
     print(clf.best_params_)
 
 def random_search(estim, param):
-    clf = RandomizedSearchCV(estimator=estim, param_distributions=param, n_jobs=8, cv=5, scoring='accuracy', verbose=10, error_score=0, n_iter=50)
+    clf = RandomizedSearchCV(estimator=estim, param_distributions=param, n_jobs=8, cv=5, scoring='accuracy', verbose=10, error_score=0, n_iter=200)
     clf.fit(X, y)
     print_detail(clf)
 
@@ -53,10 +53,27 @@ y = train[:,0]
 X = train[:,1:]
 
 # Train and write results
-train_print_results('outputfile' ,X, y, ExtraTreesClassifier(bootstrap=False, class_weight=None, criterion='gini', max_depth=None, max_features=None, max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, min_samples_leaf=1, min_samples_split=2, min_weight_fraction_leaf=0.0, n_estimators=19, n_jobs=1, oob_score=False, random_state=None, verbose=0, warm_start=False))
+#train_print_results('outputfile' ,X, y, ExtraTreesClassifier(bootstrap=False, class_weight=None, criterion='gini', max_depth=None, max_features=None, max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, min_samples_leaf=1, min_samples_split=2, min_weight_fraction_leaf=0.0, n_estimators=19, n_jobs=1, oob_score=False, random_state=None, verbose=0, warm_start=False))
 
 
 ### Below this point is wild testing ###
+
+
+gbc = GradientBoostingClassifier()
+etc = ExtraTreesClassifier(criterion='gini', max_features=None)
+rfc = RandomForestClassifier(max_features='log2', criterion='entropy')
+knc = KNeighborsClassifier(weights='distance', p=1)
+
+vc = VotingClassifier(estimators=[('gbc', gbc), ('etc', etc), ('rfc', rfc), ('knc', knc)], voting='soft', weights=[1.0, 1.2, 1.1, 1.0])
+
+params = {
+'gbc__n_estimators':scipy.stats.randint(low=510, high=540),
+'etc__n_estimators':scipy.stats.randint(low=16, high=21),
+'rfc__n_estimators':scipy.stats.randint(low=15, high=20),
+'knc__n_neighbors':scipy.stats.randint(low=13, high=20)
+}
+
+random_search(vc, params)
 
 #random_search(GradientBoostingClassifier(), {'n_estimators':scipy.stats.randint(low=500, high=550), 'learning_rate':[0.1, 1]})
 
