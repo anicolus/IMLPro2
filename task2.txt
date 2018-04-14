@@ -1,0 +1,4 @@
+linear SGD classifier
+    hinge, elasticnet, optimal lr, no shuffle
+    public: 0.745
+
